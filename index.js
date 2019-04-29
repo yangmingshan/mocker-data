@@ -6,18 +6,16 @@ const url = require('url');
 const path = require('path');
 const http = require('http');
 const fsPromises = require('fs').promises;
-const cli = require('cac')();
+const cli = require('cac')('mocker-data');
 const { version } = require('./package');
 
-cli.option('-d, --directory <directory>', 'Directory of data', {
-  default: './mock'
-});
-cli.option('-p, --port <port>', 'Port to use', {
+cli.usage('[directory] [options]');
+cli.option('-p, --port [port]', 'Port to use', {
   default: '8888'
 });
 cli.help();
 cli.version(version);
-const { options } = cli.parse();
+const { args, options } = cli.parse();
 
 function errorHandler(status, message, response) {
   response.writeHead(status, {
@@ -54,7 +52,7 @@ http
   .createServer(async (request, response) => {
     let apis = {};
     try {
-      const dir = path.join(process.cwd(), options.directory);
+      const dir = path.join(process.cwd(), args[0] || 'mock');
       const files = await fsPromises.readdir(dir);
       files.forEach(file => {
         const filePath = path.join(dir, file);
@@ -94,4 +92,4 @@ http
   })
   .listen(options.port);
 
-console.log(`Server is running in http://localhost:${options.port}`);
+console.log(`Mock server is running in http://localhost:${options.port}`);
